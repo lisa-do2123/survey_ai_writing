@@ -435,7 +435,7 @@ export default function TaskPage(props: Props) {
               注意事項：
             </span>
             <br />
-            • 本研究提供之 AI 協作功能，請依您的實際需求自由選擇使用 với AI hay không.
+            • 本研究提供之 AI 協作功能，請依您的實本研究所提供之 AI 協作功能，請您依自身實際需求，自行決定是否使用。
             <br />
             •{" "}
             <span
