@@ -1,0 +1,590 @@
+/* =========================
+   Global / Reset
+========================= */
+:root {
+  --primary: #6d2e70;              /* purple */
+  --primary-2: #8a3b90;            /* hover */
+  --accent-bg: #f5f0f7;            /* very light purple */
+  --bg: #f8fafc;
+  --card: rgba(255, 255, 255, 0.95);
+  --text: #1e293b;
+  --muted: #475569;
+  --danger: #ef4444;
+  --shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  line-height: 1.6;
+}
+
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+hr {
+  border: 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  margin: 14px 0;
+}
+
+/* =========================
+   Layout helpers
+========================= */
+.container {
+  min-height: 100vh;
+  padding: 40px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.vstack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hstack {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 18px;
+}
+
+@media (max-width: 980px) {
+  .grid2 { grid-template-columns: 1fr; }
+}
+
+/* =========================
+   FormShell / Card / Banner
+========================= */
+.formShellWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 850px;
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.formBanner {
+  width: 220%;
+  height: 160px;
+  background-size: cover;
+  background-position: left top;
+  background-repeat: no-repeat;
+}
+
+.formHeaderStrip {
+  height: 6px;
+  width: 100%;
+  background: var(--primary);
+}
+
+.formBody {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .container { padding: 24px 12px; }
+  .formBanner { height: 120px; }
+  .formBody { padding: 20px; }
+}
+
+/* =========================
+   Typography
+========================= */
+.pageTitle {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+
+.small {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.sectionTitle {
+  font-weight: 900;
+  color: var(--text);
+}
+
+.sectionBody {
+  color: var(--muted);
+}
+
+.sectionTitleZh {
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.sectionBodyZh {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* highlight for key numbers */
+.hl {
+  color: var(--primary);
+  font-weight: 900;
+  background: rgba(109, 46, 112, 0.10);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* =========================
+   Panels / Boxes
+========================= */
+.panel {
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Consent action box */
+.consentAction {
+  background: var(--accent-bg);
+  border: 1px solid rgba(109, 46, 112, 0.18);
+}
+
+.consentCheck {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(15,23,42,0.06);
+}
+
+.consentCheck.isChecked {
+  border-color: rgba(109, 46, 112, 0.28);
+  box-shadow: 0 0 0 3px rgba(109, 46, 112, 0.10);
+}
+
+/* Missing (top warning) */
+.missingBox {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #991b1b;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+/* Field-level missing highlight (for Demographics etc.) */
+.missingField {
+  border: 1px solid var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+/* Sticky panel (desktop) */
+.sticky {
+  position: sticky;
+  top: 18px;
+  align-self: start;
+}
+
+/* =========================
+   Buttons
+========================= */
+button {
+  appearance: none;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  min-height: 44px;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+button:hover {
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.10);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+button.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: rgba(109, 46, 112, 0.4);
+}
+
+button.primary:hover {
+  background: var(--primary-2);
+}
+
+.btnRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* =========================
+   Inputs
+========================= */
+input[type="text"],
+input[type="email"],
+select,
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #fff;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(109, 46, 112, 0.55);
+  box-shadow: 0 0 0 4px rgba(109, 46, 112, 0.12);
+}
+
+textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+}
+
+/* range (slider) */
+input[type="range"] {
+  width: 100%;
+}
+
+/* =========================
+   Chat + Task widgets
+========================= */
+.chatBox {
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(15, 23, 42, 0.02);
+  border-radius: 16px;
+  padding: 12px;
+  min-height: 180px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.msg {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+}
+
+.msg.user {
+  border-color: rgba(109, 46, 112, 0.22);
+  background: rgba(109, 46, 112, 0.06);
+}
+
+.kpiRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.kpi {
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #fff;
+  font-size: 14px;
+}
+
+.kpi.good {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.kpi.warn {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+/* =========================
+   Progress Footer (2-row layout)
+   Row1: 上一步 (left) / 下一步 (right)
+   Row2: centered bar + 第 x / y 頁
+========================= */
+.progressFooter {
+  padding: 16px 32px 18px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.progressRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.progressLeft,
+.progressRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progressRowBottom {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.progressCenter {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width 220ms ease;
+}
+
+.progressPageText {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .progressFooter { padding: 12px 20px 16px; }
+  .progressCenter { max-width: 100%; }
+  .progressPageText { font-size: 14px; }
+}
+
+/* =========================
+   Likert block (optional base)
+   If your LikertBlock has its own CSS, you can ignore.
+========================= */
+.likertRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.likertItem {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+}
+
+.likertItem.missingField {
+  border-color: var(--danger) !important;
+}
+/* =========================
+   Google-Forms-like Likert Grid
+   (Only affects LikertBlock tables)
+========================= */
+
+.gfGridWrap {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.gfGrid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 760px; /* keeps columns stable on desktop */
+}
+
+.gfThLeft {
+  width: 38%;
+  min-width: 260px;
+}
+
+.gfTh, .gfThSub {
+  text-align: center;
+  padding: 10px 10px;
+  color: #111827;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.gfThSub {
+  padding-top: 0;
+  padding-bottom: 10px;
+}
+
+.gfColLabel {
+  font-weight: 800;
+}
+
+.gfSubLabel {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* rows */
+.gfTr td {
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.gfRowAlt td {
+  background: rgba(0,0,0,0.03); /* light alternating shading */
+}
+
+.gfRowMissing td {
+  background: rgba(239, 68, 68, 0.06) !important;
+}
+
+/* left question cell */
+.gfTdLeft {
+  padding: 14px 12px;
+  vertical-align: middle;
+}
+
+.gfRowLabel {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* radio cells */
+.gfTd {
+  padding: 10px 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.gfRadioCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+}
+
+.gfRadioCell input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gfRadioDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid #9ca3af;
+  background: #fff;
+  display: inline-block;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+/* checked */
+.gfRadioCell input:checked + .gfRadioDot {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(109, 46, 112, 0.12);
+  background: radial-gradient(circle at center, var(--primary) 0 45%, #ffffff 46% 100%);
+}
+
+/* mobile tweaks */
+@media (max-width: 768px) {
+  .gfGrid { min-width: 680px; }
+  .gfThLeft { min-width: 220px; }
+}
+.radioList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.radioRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.radioRow input[type="radio"] {
+  width: 18px;
+  height: 18px;
+}
+.pageTitleCenter {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
