@@ -1,5 +1,5 @@
 // src/pages/DebriefPage.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import type { SurveyData } from "../types";
 
 export default function DebriefPage(props: {

@@ -1,5 +1,5 @@
 // src/pages/BaselinePage.tsx
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import LikertBlock from "../components/LikertBlock";
 import type { Likert, SurveyData } from "../types";
 import { zh } from "../surveyContentZh";

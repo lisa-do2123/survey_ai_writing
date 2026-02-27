@@ -1,5 +1,5 @@
 // src/pages/AuthorshipPage.tsx
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { SurveyData } from "../types";
 
 type SetDataLike = (

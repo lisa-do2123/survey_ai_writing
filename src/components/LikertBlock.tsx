@@ -1,5 +1,4 @@
 // src/components/LikertBlock.tsx
-import React from "react";
 import type { Likert } from "../types";
 
 type Item = { id: string; text: string };

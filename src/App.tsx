@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FormShell from "./components/FormShell";
 
 import ConsentPage from "./pages/ConsentPage";

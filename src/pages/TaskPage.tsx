@@ -1,14 +1,10 @@
 // src/pages/TaskPage.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import type { SurveyData } from "../types";
 import { countSentences, countWords, now } from "../utils";
 
-/**
- * TaskPage (Stacked layout)
- * Tier 1: Product briefing (full width)
- * Tier 2: Simulated AI Collaboration (gpt-4o-mini)
- * Tier 3: Ad writing area (large editor)
- */
+const API_BASE = "https://survey-ai-writing.onrender.com";
 
 type SetDataLike = (
   updater: SurveyData | ((prev: SurveyData) => SurveyData)
@@ -154,7 +150,7 @@ export default function TaskPage(props: Props) {
 
     if (role === "assistant" && content.includes("系統暫時無法回應")) return;
 
-    fetch("http://localhost:3001/api/chatlog", {
+    fetch(`${API_BASE}/api/chatlog`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ participant_id, turn_index, role, content: content.trim() }),
@@ -251,7 +247,7 @@ export default function TaskPage(props: Props) {
     ];
 
     try {
-      const res = await fetch("http://localhost:3001/api/chat", {
+      const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: fullConversation }),
@@ -300,7 +296,7 @@ export default function TaskPage(props: Props) {
     };
 
     try {
-      const res = await fetch("http://localhost:3001/api/survey/update", {
+      const res = await fetch(`${API_BASE}/api/survey/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(taskData),
@@ -329,7 +325,7 @@ export default function TaskPage(props: Props) {
 
   // --------- UI helpers ----------
   const sentenceOk = sentenceCount >= 5;
-  const chipBase: React.CSSProperties = {
+  const chipBase: CSSProperties = {
     padding: "8px 10px",
     borderRadius: 999,
     border: "1px solid rgba(15,23,42,0.10)",
@@ -341,11 +337,11 @@ export default function TaskPage(props: Props) {
     gap: 8,
     color: "#0f172a",
   };
-  const sentenceChip: React.CSSProperties = {
+  const sentenceChip: CSSProperties = {
     ...chipBase,
     color: sentenceOk ? "var(--primary)" : "#0f172a",
   };
-  const timeChip: React.CSSProperties = {
+  const timeChip: CSSProperties = {
     ...chipBase,
     color: isActive ? "var(--primary)" : "#0f172a",
   };

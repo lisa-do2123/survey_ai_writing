@@ -1,5 +1,5 @@
 // src/pages/PostGroupPageB.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import LikertBlock from "../components/LikertBlock";
 import { zh } from "../surveyContentZh";
 import type { Likert, SurveyData } from "../types";

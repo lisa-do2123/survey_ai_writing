@@ -1,5 +1,5 @@
 // src/pages/ConsentPage.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 
 export default function ConsentPage(props: { onNext: () => void }) {
   const [agree, setAgree] = useState(false);

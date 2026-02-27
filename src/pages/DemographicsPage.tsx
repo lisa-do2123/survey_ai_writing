@@ -1,5 +1,5 @@
 // src/pages/DemographicsPage.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import type { SurveyData } from "../types";
 import { zh } from "../surveyContentZh";
 
