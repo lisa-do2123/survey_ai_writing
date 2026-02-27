@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import LikertBlock from "../components/LikertBlock";
 import type { Likert, SurveyData } from "../types";
 import { zh } from "../surveyContentZh";
+import { API_BASE } from "../utils";
 
 export default function BaselinePage(props: {
   data: SurveyData;
@@ -52,7 +53,7 @@ export default function BaselinePage(props: {
         ...lowercaseLikert 
       };
 
-      const res = await fetch("http://localhost:3001/api/survey/update", {
+      const res = await fetch(`${API_BASE}/api/survey/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -1,5 +1,6 @@
 // src/pages/ConsentPage.tsx
 import { useState } from "react";
+import { API_BASE } from "../utils";
 
 export default function ConsentPage(props: { onNext: () => void }) {
   const [agree, setAgree] = useState(false);
@@ -11,7 +12,7 @@ export default function ConsentPage(props: { onNext: () => void }) {
     
     setIsCreating(true);
     try {
-      const res = await fetch("http://localhost:3001/api/participants", {
+      const res = await fetch(`${API_BASE}/api/survey/update`, {
         method: "POST",
       });
       

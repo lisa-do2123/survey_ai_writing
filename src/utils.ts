@@ -1,3 +1,6 @@
+export const API_BASE =
+  import.meta.env.VITE_API_BASE || "https://survey-ai-writing.onrender.com";
+  
 export function now() {
   return Date.now();
 }
