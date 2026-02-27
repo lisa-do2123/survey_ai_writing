@@ -16,7 +16,7 @@ import { zh } from "./surveyContentZh";
 import type { Likert, SurveyData } from "./types";
 import { now } from "./utils";
 
-const API_BASE = "http://localhost:3001";
+const API_BASE = "https://survey-ai-writing.onrender.com";
 const TOTAL_STEPS = 9;
 
 function makeEmpty(): SurveyData {
