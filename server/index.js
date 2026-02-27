@@ -165,9 +165,14 @@ app.post("/api/chatlog", async (req, res) => {
     return res.status(500).json({ error: "chatlog_failed" });
   }
 });
+app.get("/", (req, res) => {
+  res.send("Backend is running ✅");
+});
 
+app.get("/health", (req, res) => {
+  res.status(200).send("ok");
+});
 // ---------- Listen ----------
-// Render sẽ tự động cấp PORT qua biến môi trường
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running at port ${PORT}`);
