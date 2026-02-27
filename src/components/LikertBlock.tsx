@@ -1,14 +1,51 @@
 // src/components/LikertBlock.tsx
+import { useEffect, useState } from "react";
 import type { Likert } from "../types";
 
 type Item = { id: string; text: string };
+
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mql = window.matchMedia(query);
+    const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);
+
+    // keep initial value in sync
+    setMatches(mql.matches);
+
+    // Newer browsers
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    }
+
+    // Older Safari fallback (legacy API)
+    // NOTE: Do NOT use @ts-expect-error here because TS may not error on these lines,
+    // which would trigger "Unused '@ts-expect-error' directive".
+    const legacy = mql as unknown as {
+      addListener?: (cb: (e: MediaQueryListEvent) => void) => void;
+      removeListener?: (cb: (e: MediaQueryListEvent) => void) => void;
+    };
+
+    legacy.addListener?.(onChange);
+    return () => legacy.removeListener?.(onChange);
+  }, [query]);
+
+  return matches;
+}
 
 export default function LikertBlock(props: {
   title: string;
   items: Item[];
   valueMap: Record<string, Likert | undefined>;
   onChange: (id: string, v: Likert) => void;
-  anchors?: string[];
+  anchors?: string[]; // [left, right]
   missingIds?: string[];
 }) {
   const scale = [1, 2, 3, 4, 5, 6, 7] as const;
@@ -16,157 +53,137 @@ export default function LikertBlock(props: {
   const leftAnchor = props.anchors?.[0] ?? "";
   const rightAnchor = props.anchors?.[1] ?? "";
 
+  // ✅ Phone layout switch
+  const isPhone = useMediaQuery("(max-width: 640px)");
+
   return (
     <div className="panel">
-      {/* CSS Inline để xử lý hiển thị dọc trên điện thoại */}
-      <style>{`
-        @media (max-width: 600px) {
-          .gfGrid thead { display: none; } /* Ẩn header bảng trên mobile */
-          .gfGrid, .gfGrid tbody, .gfGrid tr, .gfGrid td { 
-            display: block; 
-            width: 100%; 
-          }
-          .gfTr { 
-            padding: 15px 10px; 
-            border-bottom: 2px solid #eee; 
-          }
-          .gfTdLeft { 
-            text-align: left; 
-            font-weight: bold; 
-            margin-bottom: 12px; 
-            padding: 0 !important;
-          }
-          .gfTd { 
-            display: inline-block !important; 
-            width: 14.28% !important; /* Chia đều 7 nút theo chiều ngang hoặc bạn có thể chỉnh dọc */
-            padding: 5px 0 !important;
-          }
-          /* Giao diện dọc hoàn toàn cho từng radio button */
-          .mobileLikertWrap {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 10px;
-          }
-          .mobileOption {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            cursor: pointer;
-          }
-          .mobileOption.selected {
-            background: rgba(109,46,112,0.08);
-            border-color: var(--primary);
-          }
-          .mobileValue {
-            width: 24px;
-            font-weight: bold;
-            color: var(--primary);
-          }
-          .mobileText { font-size: 14px; flex: 1; }
-        }
-        
-        /* Chỉ hiện bảng trên màn hình lớn */
-        @media (min-width: 601px) {
-          .mobileOnly { display: none; }
-        }
-      `}</style>
-
       <div className="sectionHead">
-        <div className="sectionTitleZh" style={{ fontSize: 18 }}>{props.title}</div>
+        <div className="sectionTitleZh" style={{ fontSize: 18 }}>
+          {props.title}
+        </div>
       </div>
 
-      <div className="gfGridWrap">
-        {/* PC/Tablet: Hiển thị bảng ngang truyền thống */}
-        <table className="gfGrid" role="table">
-          <thead>
-            <tr>
-              <th className="gfThLeft" />
-              {scale.map((v) => (
-                <th key={v} className="gfTh">
-                  <div className="gfColLabel">{v}</div>
-                </th>
-              ))}
-            </tr>
-            <tr>
-              <th className="gfThLeft gfThLeftSub" />
-              {scale.map((v) => (
-                <th key={`sub-${v}`} className="gfThSub">
-                  {v === 1 ? <div className="gfSubLabel">{leftAnchor}</div> : null}
-                  {v === 7 ? <div className="gfSubLabel">{rightAnchor}</div> : null}
-                </th>
-              ))}
-            </tr>
-          </thead>
+      {/* =========================
+          MOBILE: Vertical Likert
+          ========================= */}
+      {isPhone ? (
+        <div className="likertMobile">
+          {props.items.map((it) => {
+            const selected = props.valueMap?.[it.id];
+            const isMissing = missingSet.has(it.id);
 
-          <tbody>
-            {props.items.map((it, idx) => {
-              const selected = props.valueMap?.[it.id];
-              const isMissing = missingSet.has(it.id);
+            return (
+              <div
+                key={it.id}
+                id={`block-${it.id}`} // ✅ keep for scroll-to-missing
+                className={`likertMobileItem ${
+                  isMissing ? "likertMobileMissing" : ""
+                }`}
+              >
+                <div className="likertMobileQ">{it.text}</div>
 
-              return (
-                <tr
-                  key={it.id}
-                  id={`block-${it.id}`} 
-                  className={[
-                    "gfTr",
-                    idx % 2 === 1 ? "gfRowAlt" : "",
-                    isMissing ? "gfRowMissing" : "",
-                  ].join(" ")}
+                {(leftAnchor || rightAnchor) && (
+                  <div className="likertMobileAnchors">
+                    <span className="likertMobileAnchorLeft">{leftAnchor}</span>
+                    <span className="likertMobileAnchorRight">
+                      {rightAnchor}
+                    </span>
+                  </div>
+                )}
+
+                <div
+                  className="likertMobileScale"
+                  role="radiogroup"
+                  aria-label={it.text}
                 >
-                  <td className="gfTdLeft">
-                    <div className="gfRowLabel">{it.text}</div>
-                    
-                    {/* Mobile: Chỉ hiển thị khối này trên điện thoại */}
-                    <div className="mobileOnly mobileLikertWrap">
-                      <div className="btnRow" style={{ justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
-                        <span style={{ color: '#64748b' }}>{leftAnchor}</span>
-                        <span style={{ color: '#64748b' }}>{rightAnchor}</span>
-                      </div>
-                      {scale.map((v) => (
-                        <div 
-                          key={v} 
-                          className={`mobileOption ${selected === v ? 'selected' : ''}`}
-                          onClick={() => props.onChange(it.id, v)}
-                        >
-                          <span className="mobileValue">{v}</span>
-                          <span className="mobileText">
-                            {v === 1 ? leftAnchor : v === 7 ? rightAnchor : ""}
-                          </span>
+                  {scale.map((v) => (
+                    <label key={`${it.id}-${v}`} className="likertMobileChoice">
+                      <input
+                        type="radio"
+                        name={it.id}
+                        checked={selected === v}
+                        onChange={() => props.onChange(it.id, v)}
+                      />
+                      <span className="likertMobileDot" />
+                      <span className="likertMobileNum">{v}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* =========================
+           DESKTOP/TABLET: Grid
+           ========================= */
+        <div className="gfGridWrap">
+          <table className="gfGrid" role="table">
+            <thead>
+              <tr>
+                <th className="gfThLeft" />
+                {scale.map((v) => (
+                  <th key={v} className="gfTh">
+                    <div className="gfColLabel">{v}</div>
+                  </th>
+                ))}
+              </tr>
+
+              <tr>
+                <th className="gfThLeft gfThLeftSub" />
+                {scale.map((v) => (
+                  <th key={`sub-${v}`} className="gfThSub">
+                    {v === 1 ? (
+                      <div className="gfSubLabel">{leftAnchor}</div>
+                    ) : null}
+                    {v === 7 ? (
+                      <div className="gfSubLabel">{rightAnchor}</div>
+                    ) : null}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {props.items.map((it, idx) => {
+                const selected = props.valueMap?.[it.id];
+                const isMissing = missingSet.has(it.id);
+
+                return (
+                  <tr
+                    key={it.id}
+                    id={`block-${it.id}`} // ✅ keep for scroll-to-missing
+                    className={[
+                      "gfTr",
+                      idx % 2 === 1 ? "gfRowAlt" : "",
+                      isMissing ? "gfRowMissing" : "",
+                    ].join(" ")}
+                  >
+                    <td className="gfTdLeft">
+                      <div className="gfRowLabel">{it.text}</div>
+                    </td>
+
+                    {scale.map((v) => (
+                      <td key={`${it.id}-${v}`} className="gfTd">
+                        <label className="gfRadioCell">
                           <input
                             type="radio"
-                            style={{ margin: 0 }}
+                            name={it.id}
                             checked={selected === v}
-                            readOnly
+                            onChange={() => props.onChange(it.id, v)}
                           />
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-
-                  {/* PC: Ẩn các cột này trên điện thoại thông qua CSS display:none ở header */}
-                  {scale.map((v) => (
-                    <td key={`${it.id}-${v}`} className="gfTd desktopOnly">
-                      <label className="gfRadioCell">
-                        <input
-                          type="radio"
-                          name={it.id}
-                          checked={selected === v}
-                          onChange={() => props.onChange(it.id, v)}
-                        />
-                        <span className="gfRadioDot" />
-                      </label>
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                          <span className="gfRadioDot" />
+                        </label>
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
