@@ -418,13 +418,13 @@ export default function TaskPage(props: Props) {
           </div>
         </div>
 
-        {/* Tier 2: ChatGPT 5.2 */}
+        {/* Tier 2: ChatGPT */}
         <div className="panel vstack">
           <div
             className="sectionTitleZh"
             style={{ display: "flex", alignItems: "center", gap: 10 }}
           >
-            二、ChatGPT 5.2
+            二、ChatGPT
           </div>
 
           <div
@@ -482,7 +482,7 @@ export default function TaskPage(props: Props) {
                     opacity: 0.9,
                   }}
                 />
-                <div style={{ fontWeight: 900 }}>ChatGPT 5.2</div>
+                <div style={{ fontWeight: 900 }}>ChatGPT</div>
               </div>
               <div className="small" style={{ color: "var(--primary)" }}>
                 {aiStatus === "reasoning"
@@ -538,7 +538,7 @@ export default function TaskPage(props: Props) {
                         marginBottom: 4,
                       }}
                     >
-                      {m.role === "user" ? "你" : "ChatGPT 5.2"}
+                      {m.role === "user" ? "你" : "ChatGPT"}
                     </div>
                     {m.content}
                   </div>
@@ -570,7 +570,7 @@ export default function TaskPage(props: Props) {
                         marginBottom: 4,
                       }}
                     >
-                      ChatGPT 5.2
+                      ChatGPT
                     </div>
                     <span style={{ color: "#64748b", fontWeight: 800 }}>
                       正在推理{".".repeat(thinkingDots)}
