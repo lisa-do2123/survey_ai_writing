@@ -14,18 +14,15 @@ export default function PostGroupPageA(props: {
   const [showMissing, setShowMissing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  // ✅ Chỉ lấy các blocks dành cho trang 5 (PQ, BAA, IA, PAu)
   const blocks = [zh.post.blocks[0], zh.post.blocks[1], zh.post.blocks[2], zh.post.blocks[3]];
 
   const allIds = blocks.flatMap((b) => b.items.map((it) => it.id));
   const missingIds = allIds.filter((id) => typeof props.data.likert[id] !== "number");
 
-  // ✅ CẬP NHẬT: Logic cuộn đến câu hỏi thiếu đầu tiên và gửi dữ liệu
   const handleNext = async () => {
     if (missingIds.length > 0) {
       setShowMissing(true);
       
-      // Tìm phần tử của câu hỏi đầu tiên bị thiếu
       const firstMissingId = missingIds[0];
       const element = document.getElementById(`block-${firstMissingId}`);
       
@@ -43,7 +40,6 @@ export default function PostGroupPageA(props: {
 
     setIsSubmitting(true);
     try {
-      // Chuẩn hóa key sang chữ thường để khớp với Database PostgreSQL
       const lowercaseLikert: any = {};
       Object.keys(props.data.likert).forEach(key => {
         lowercaseLikert[key.toLowerCase()] = props.data.likert[key];
@@ -78,7 +74,6 @@ export default function PostGroupPageA(props: {
         請根據剛剛的寫作與 AI 使用經驗作答。
       </div>
 
-      {/* ✅ CẬP NHẬT: Ẩn mã ID kỹ thuật, hiển thị thông báo thân thiện */}
       {showMissing && missingIds.length > 0 && (
         <div className="missingBox" style={{ marginTop: 10, color: "var(--danger)", fontWeight: 900, textAlign: "center" }}>
           ⚠️ 尚有題目未完成，請檢查紅框標示的部分。

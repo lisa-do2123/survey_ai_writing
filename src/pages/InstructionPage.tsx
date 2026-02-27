@@ -13,7 +13,7 @@ export default function InstructionPage(props: {
   onNext: () => void;
 }) {
   const [ans, setAns] = useState<number | null>(null);
-  const [isMoving, setIsMoving] = useState(false); // ✅ Chi tiết tối ưu: Tránh double-click
+  const [isMoving, setIsMoving] = useState(false); 
   
   const correct = ans === zh.instruction.correctIndex;
 
@@ -33,7 +33,7 @@ export default function InstructionPage(props: {
 
   const handleNext = () => {
     if (!correct || isMoving) return;
-    setIsMoving(true); // ✅ Đánh dấu đang chuyển trang
+    setIsMoving(true); 
     props.onNext();
   };
 

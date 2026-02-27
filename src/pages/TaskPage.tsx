@@ -2,9 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { SurveyData } from "../types";
-import { countSentences, countWords, now } from "../utils";
-
-const API_BASE = "https://survey-ai-writing.onrender.com";
+import { countSentences, countWords, now, API_BASE } from "../utils";
 
 type SetDataLike = (
   updater: SurveyData | ((prev: SurveyData) => SurveyData)
@@ -39,6 +37,7 @@ export default function TaskPage(props: Props) {
   const initialElapsed = (props.data.writing as any).elapsedMs ?? 0;
   const [localElapsedMs, setLocalElapsedMs] = useState<number>(initialElapsed);
   const [isActive, setIsActive] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); 
   const tickRef = useRef<number | null>(null);
   const lastTickAtRef = useRef<number>(Date.now());
 
@@ -150,7 +149,7 @@ export default function TaskPage(props: Props) {
 
     if (role === "assistant" && content.includes("系統暫時無法回應")) return;
 
-    fetch(`${API_BASE}/api/chatlog`, {
+    fetch(`${API_BASE}/api/chatlog`, { 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ participant_id, turn_index, role, content: content.trim() }),
@@ -207,7 +206,6 @@ export default function TaskPage(props: Props) {
     const prompt = input.trim();
     if (!prompt || aiStatus !== "idle") return;
 
-    // ✅ XÓA NGAY LẬP TỨC: Đưa ô nhập liệu về rỗng ngay khi nhấn gửi
     setInput("");
     
     props.log("ai_prompt_send", { chars: prompt.length });
@@ -247,7 +245,7 @@ export default function TaskPage(props: Props) {
     ];
 
     try {
-      const res = await fetch(`${API_BASE}/api/chat`, {
+      const res = await fetch(`${API_BASE}/api/chat`, { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: fullConversation }),
@@ -282,8 +280,9 @@ export default function TaskPage(props: Props) {
 
   const onSubmit = async () => {
     const participant_id = sessionStorage.getItem("participant_id");
-    if (!participant_id) return;
+    if (!participant_id || isSubmitting) return; 
 
+    setIsSubmitting(true); 
     persistElapsed(localElapsedMs);
 
     const taskData = {
@@ -296,7 +295,7 @@ export default function TaskPage(props: Props) {
     };
 
     try {
-      const res = await fetch(`${API_BASE}/api/survey/update`, {
+      const res = await fetch(`${API_BASE}/api/survey/update`, { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(taskData),
@@ -320,6 +319,8 @@ export default function TaskPage(props: Props) {
     } catch (e) {
       console.error("Submit error:", e);
       alert("提交失敗，請檢查網路連線");
+    } finally {
+      setIsSubmitting(false); 
     }
   };
 
@@ -681,20 +682,20 @@ export default function TaskPage(props: Props) {
                 persistElapsed(localElapsedMs);
                 if (props.onPrev) props.onPrev();
               }}
-              disabled={!props.onPrev}
+              disabled={!props.onPrev || isSubmitting}
             >
               上一步
             </button>
             <button
               className="primary"
-              disabled={sentenceOk === false}
+              disabled={sentenceOk === false || isSubmitting} 
               onClick={onSubmit}
             >
-              提交作品
+              {isSubmitting ? "儲存中..." : "提交作品"}
             </button>
           </div>
 
-          {!sentenceOk && (
+          {!sentenceOk && !isSubmitting && (
             <div
               className="small"
               style={{ color: "var(--danger)", fontWeight: 900, marginTop: 10 }}

@@ -13,7 +13,7 @@ export default function AuthorshipPage(props: {
   onPrev: () => void;
   onNext: () => void;
 }) {
-  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Quản lý trạng thái gửi
+  const [isSubmitting, setIsSubmitting] = useState(false); 
 
   const options = useMemo(
     () => [
@@ -42,7 +42,6 @@ export default function AuthorshipPage(props: {
     }));
   };
 
-  // ✅ HÀM CẬP NHẬT: Gửi dữ liệu vào cột authorship_label và authorship_reason
   const handleNext = async () => {
     if (!canNext || isSubmitting) return;
 
@@ -51,11 +50,10 @@ export default function AuthorshipPage(props: {
 
     setIsSubmitting(true);
     try {
-      // ✅ Payload khớp 100% với tên cột trong Database
       const payload = {
         id: participant_id,
-        authorship_label: selected, // Lưu số thứ tự 1-7
-        authorship_reason: props.data.authorship.reason || "" // Lưu văn bản考量
+        authorship_label: selected, 
+        authorship_reason: props.data.authorship.reason || ""
       };
 
       const res = await fetch(`${API_BASE}/api/survey/update`, {
@@ -145,7 +143,7 @@ export default function AuthorshipPage(props: {
         <button 
           className="primary" 
           disabled={!canNext || isSubmitting} 
-          onClick={handleNext} // ✅ Gọi hàm handleNext để lưu vào DB
+          onClick={handleNext} 
         >
           {isSubmitting ? "儲存中..." : "下一步"}
         </button>

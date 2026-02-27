@@ -14,23 +14,19 @@ export default function PostGroupPageB(props: {
   const [showMissing, setShowMissing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  // ✅ Lấy các blocks cho trang 6 (PMD, PCT)
   const blocks = [zh.post.blocks[4], zh.post.blocks[5]];
 
   const allIds = blocks.flatMap((b) => b.items.map((it) => it.id));
   const missingIds = allIds.filter((id) => typeof props.data.likert[id] !== "number");
 
-  // ✅ CẬP NHẬT: Logic cuộn đến câu hỏi thiếu và chuẩn hóa dữ liệu
   const handleNext = async () => {
     if (missingIds.length > 0) {
       setShowMissing(true);
       
-      // Tìm phần tử của câu hỏi đầu tiên bị thiếu
       const firstMissingId = missingIds[0];
       const element = document.getElementById(`block-${firstMissingId}`);
       
       if (element) {
-        // Cuộn mượt mà đến vị trí câu đó
         element.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -43,7 +39,6 @@ export default function PostGroupPageB(props: {
 
     setIsSubmitting(true);
     try {
-      // ✅ Tự động chuyển đổi key sang chữ thường để khớp tuyệt đối với SQL
       const lowercaseLikert: any = {};
       Object.keys(props.data.likert).forEach(key => {
         lowercaseLikert[key.toLowerCase()] = props.data.likert[key];
@@ -75,7 +70,6 @@ export default function PostGroupPageB(props: {
     <div className="card vstack">
       <div className="pageTitleCenter">任務後問卷（第 2 部分）</div>
       
-      {/* ✅ CẬP NHẬT: Thông báo thân thiện, không hiện mã ID kỹ thuật */}
       {showMissing && missingIds.length > 0 && (
         <div className="missingBox" style={{ marginTop: 10, color: "var(--danger)", fontWeight: 900, textAlign: "center" }}>
           ⚠️ 尚有題目未完成，請檢查紅框標示的部分。

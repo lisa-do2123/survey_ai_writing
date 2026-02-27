@@ -14,8 +14,6 @@ if (!process.env.OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-// ✅ Allowlist: CHỈ giữ các cột THỰC SỰ có trong survey_results
-// -> mọi field lạ (vd: consent) sẽ bị drop, tránh lỗi schema cache / missing column
 const ALLOWED_COLUMNS = new Set([
   // identity
   "id",
@@ -34,7 +32,6 @@ const ALLOWED_COLUMNS = new Set([
   "completed_at",
   "total_duration_sec",
 
-  // ===== Likert examples (chỉ giữ những cột bạn THỰC SỰ tạo trong DB) =====
   // Perceived Moral Dissonance
   "pmd1", "pmd2", "pmd3",
 
@@ -44,7 +41,6 @@ const ALLOWED_COLUMNS = new Set([
   // Writing self-efficacy (ví dụ)
   "wse1", "wse2", "wse3", "wse4", "wse5", "wse6", "wse7", "wse8",
 
-  // Nếu bạn có các block khác: thêm đúng tên cột DB (snake_case)
 ]);
 
 // ---------- Middleware ----------
@@ -66,7 +62,6 @@ function filterByAllowlist(updateData) {
     const lowerKey = String(key).toLowerCase();
     if (!ALLOWED_COLUMNS.has(lowerKey)) continue;
 
-    // Optionally drop undefined (Supabase sẽ ignore null/undefined khác nhau)
     if (typeof val === "undefined") continue;
 
     filtered[lowerKey] = val;
@@ -100,24 +95,21 @@ app.post("/api/survey/update", async (req, res) => {
 
     const filteredData = filterByAllowlist(updateData);
 
-    // Không có cột hợp lệ -> coi như success (tránh Supabase error)
     if (Object.keys(filteredData).length === 0) {
       return res.json({ success: true, message: "No valid columns to update" });
     }
 
-    // 1) UPDATE trước (vì record đã tồn tại sau /api/participants)
     const { data: updatedRows, error: updateError } = await supabase
       .from("survey_results")
       .update(filteredData)
       .eq("id", id)
-      .select("id"); // để biết có update được row nào không
+      .select("id"); 
 
     if (updateError) {
       console.error("survey update error:", updateError.message);
       return res.status(500).json({ error: updateError.message });
     }
 
-    // 2) Nếu update không trúng row nào (hiếm) -> INSERT fallback
     if (!updatedRows || updatedRows.length === 0) {
       const { error: insertError } = await supabase
         .from("survey_results")

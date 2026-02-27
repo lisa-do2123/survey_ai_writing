@@ -19,17 +19,14 @@ export default function BaselinePage(props: {
     [props.baselineIds, props.data.likert]
   );
 
-  // ✅ HÀM CẬP NHẬT: Tự động cuộn đến câu chưa điền đầu tiên
   const handleNext = async () => {
     if (missingIds.length > 0) {
       setShowMissing(true);
 
-      // Tìm ID của câu hỏi đầu tiên bị thiếu
       const firstMissingId = missingIds[0];
       const element = document.getElementById(`block-${firstMissingId}`); // ID này được tạo trong LikertBlock
 
       if (element) {
-        // Cuộn mượt mà đến vị trí câu đó và căn vào giữa màn hình
         element.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -42,7 +39,6 @@ export default function BaselinePage(props: {
 
     setIsSubmitting(true);
     try {
-      // Chuẩn hóa key sang chữ thường trước khi gửi để khớp DB
       const lowercaseLikert: any = {};
       Object.keys(props.data.likert).forEach(key => {
         lowercaseLikert[key.toLowerCase()] = props.data.likert[key];
@@ -81,7 +77,6 @@ export default function BaselinePage(props: {
             請根據您目前的想法與經驗作答（1 = 非常不同意，7 = 非常同意）
           </div>
           
-          {/* ✅ CẬP NHẬT: Ẩn mã câu hỏi kỹ thuật (pau3...) */}
           {showMissing && missingIds.length > 0 && (
             <div className="missingBox" style={{ marginTop: 10, color: "var(--danger)", fontWeight: 900, textAlign: "center" }}>
               ⚠️ 尚有題目未完成，請檢查下方紅框標示的部分。

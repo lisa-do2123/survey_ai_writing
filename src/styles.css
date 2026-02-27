@@ -588,3 +588,7 @@ input[type="range"] {
   font-weight: 700;
   margin-bottom: 24px;
 }
+html {
+  scroll-behavior: auto;
+  scroll-padding-top: 0px;
+}

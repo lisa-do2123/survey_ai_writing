@@ -14,7 +14,7 @@ export default function DemographicsPage(props: {
   onPrev: () => void;
   onNext: () => void;
 }) {
-  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Trạng thái gửi dữ liệu
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const d = props.data.demo;
 
   const hasValidEmail = Boolean(d.email && d.email.includes("@"));
@@ -27,7 +27,6 @@ export default function DemographicsPage(props: {
     props.setData((s) => ({ ...s, demo: { ...s.demo, ...patch } }));
   };
 
-  // ✅ HÀM MỚI: Đồng bộ dữ liệu nhân khẩu học vào bảng ngang
   const handleNext = async () => {
     if (!canNext || isSubmitting) return;
 
@@ -36,7 +35,6 @@ export default function DemographicsPage(props: {
 
     setIsSubmitting(true);
     try {
-      // Ánh xạ dữ liệu UI sang tên cột trong Database (viết thường)
       const payload = {
         id: participant_id,
         age_group: d.age,
@@ -155,7 +153,6 @@ export default function DemographicsPage(props: {
         />
       </div>
 
-      {/* Đồng ý liên hệ */}
       <div className="panel vstack">
         <div className="sectionTitle" style={{ marginTop: 6 }}>
           若未來需進行後續研究，您是否同意透過 Email 聯繫？
@@ -185,7 +182,6 @@ export default function DemographicsPage(props: {
         </div>
       </div>
 
-      {/* Góp ý thêm */}
       <div className="panel vstack">
         <div className="sectionTitle">{zh.demo.openEnded}</div>
         <textarea
@@ -197,7 +193,6 @@ export default function DemographicsPage(props: {
         />
       </div>
 
-      {/* Điều hướng */}
       <div className="panel btnRow" style={{ justifyContent: "space-between" }}>
         <button onClick={props.onPrev} disabled={isSubmitting}>上一步</button>
         <button 

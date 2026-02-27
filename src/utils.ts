@@ -1,6 +1,10 @@
+// src/utils.ts
+
+// ✅ Ưu tiên biến môi trường (Vercel/Local), fallback về Render nếu chưa set
 export const API_BASE =
-  import.meta.env.VITE_API_BASE || "https://survey-ai-writing.onrender.com";
-  
+  (import.meta.env.VITE_API_BASE as string | undefined)?.trim() ||
+  "https://survey-ai-writing.onrender.com";
+
 export function now() {
   return Date.now();
 }
@@ -8,10 +12,9 @@ export function now() {
 export function countSentences(text: string) {
   const cleaned = text.replace(/\r/g, "").trim();
   if (!cleaned) return 0;
-  // Split by Chinese punctuation or English punctuation or newlines
   const parts = cleaned
     .split(/[.。！？!?]\s*|\n+/)
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean);
   return parts.length;
 }
@@ -21,12 +24,13 @@ export function countWords(text: string) {
   if (!trimmed) return 0;
   const englishWords = trimmed.match(/[A-Za-z0-9]+/g)?.length ?? 0;
   const cjkChars = trimmed.match(/[\u4e00-\u9fff]/g)?.length ?? 0;
-  // heuristic: 2 CJK chars ≈ 1 "word"
   return englishWords + Math.ceil(cjkChars / 2);
 }
 
 export function downloadJson(filename: string, data: unknown) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -55,11 +59,11 @@ export function getOrCreatePostAOrder(): number[] {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.every((x) => typeof x === "number")) return parsed;
+      if (Array.isArray(parsed) && parsed.every((x) => typeof x === "number"))
+        return parsed;
     } catch {}
   }
   const order = shuffle([0, 2, 3, 1]); // PQ(0), IA(2), PAu(3), BAA(1)
   sessionStorage.setItem(key, JSON.stringify(order));
   return order;
 }
-

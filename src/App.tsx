@@ -14,10 +14,23 @@ import DebriefPage from "./pages/DebriefPage";
 
 import { zh } from "./surveyContentZh";
 import type { Likert, SurveyData } from "./types";
-import { now } from "./utils";
+import { API_BASE, now } from "./utils";
 
-const API_BASE = "https://survey-ai-writing.onrender.com";
 const TOTAL_STEPS = 9;
+
+// ✅ Robust scroll helper (works across iOS Safari / Android / Desktop)
+function scrollToTopSafe() {
+  // 1) window scroll
+  try {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  } catch {
+    window.scrollTo(0, 0);
+  }
+
+  // 2) if your page uses a scroll container (just in case)
+  const el = document.querySelector(".container");
+  if (el && "scrollTop" in el) (el as HTMLElement).scrollTop = 0;
+}
 
 function makeEmpty(): SurveyData {
   return {
@@ -41,29 +54,42 @@ export default function App() {
     return raw ? (JSON.parse(raw) as SurveyData) : makeEmpty();
   });
 
+  // ✅ Disable browser scroll restoration (prevents “stuck at bottom”)
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
+  // ✅ Always scroll to top when step changes (mobile/tablet/desktop)
+  useEffect(() => {
+    scrollToTopSafe();
+  }, [step]);
+
+  // --- Persist local session data ---
   useEffect(() => {
     sessionStorage.setItem("survey_data_v5", JSON.stringify(data));
   }, [data]);
 
-  // ✅ Tạo participant mới trong bảng survey_results
+  // ✅ Create participant id once (server inserts row into survey_results)
   const ensureParticipant = async () => {
     const existing = sessionStorage.getItem("participant_id");
     if (existing) return existing;
 
     const r = await fetch(`${API_BASE}/api/participants`, { method: "POST" });
     const d = await r.json();
+    if (!d?.participant_id) throw new Error("No participant_id returned");
     sessionStorage.setItem("participant_id", d.participant_id);
     return d.participant_id as string;
   };
 
-  // ✅ HÀM LƯU CHUNG MỚI: Sửa lỗi "Cannot PUT /api/responses"
-  const syncToWideTable = async (payload: any) => {
+  // ✅ Sync wide table updates (lowercase keys for DB consistency)
+  const syncToWideTable = async (payload: Record<string, any>) => {
     const participant_id = sessionStorage.getItem("participant_id");
     if (!participant_id) return;
 
-    // Tự động chuyển tất cả key sang chữ thường để khớp SQL
-    const lowercasePayload: any = { id: participant_id };
-    Object.keys(payload).forEach(key => {
+    const lowercasePayload: Record<string, any> = { id: participant_id };
+    Object.keys(payload).forEach((key) => {
       lowercasePayload[key.toLowerCase()] = payload[key];
     });
 
@@ -85,25 +111,33 @@ export default function App() {
     }));
   };
 
-  // ✅ Cập nhật Likert và đồng bộ ngay lập tức
+  // ✅ Likert update + immediate sync
   const setLikert = (id: string, v: Likert) => {
     setData((d) => ({ ...d, likert: { ...d.likert, [id]: v } }));
     syncToWideTable({ [id]: v });
   };
 
-  // ✅ Cập nhật các khối dữ liệu lớn (Writing, Demo...)
-  const setDataAndAutosave = (updater: any) => {
+  // ✅ Big blocks update (writing/authorship/demo) + autosave
+  const setDataAndAutosave = (updater: SurveyData | ((prev: SurveyData) => SurveyData)) => {
     setData((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
+      const next = typeof updater === "function" ? (updater as any)(prev) : updater;
 
+      // Writing
       if (next.writing?.storyText !== prev.writing?.storyText) {
         syncToWideTable({ story_text: next.writing.storyText });
       }
+
+      // Authorship (normalize to DB columns)
       if (next.authorship !== prev.authorship) {
-        syncToWideTable(next.authorship);
+        const payload: any = {};
+        if (typeof next.authorship?.value === "number") payload.authorship_label = next.authorship.value;
+        if (typeof next.authorship?.reason === "string") payload.authorship_reason = next.authorship.reason;
+        if (Object.keys(payload).length) syncToWideTable(payload);
       }
+
+      // Demo (send raw; server allowlist decides what is stored)
       if (next.demo !== prev.demo) {
-        syncToWideTable(next.demo);
+        syncToWideTable(next.demo as any);
       }
 
       return next;
@@ -208,11 +242,10 @@ export default function App() {
             onPrev={() => setStep(8)}
             onFinish={async () => {
               log("finish");
-              const participant_id = sessionStorage.getItem("participant_id");
 
+              const participant_id = sessionStorage.getItem("participant_id");
               if (participant_id) {
                 try {
-                  // ✅ Chốt thời gian hoàn thành và tính duration
                   await fetch(`${API_BASE}/api/participants/complete`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -227,6 +260,7 @@ export default function App() {
               sessionStorage.removeItem("survey_data_v5");
               setData(makeEmpty());
               setStep(1);
+
               alert("已完成，感謝參與！");
             }}
           />
