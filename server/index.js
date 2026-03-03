@@ -14,33 +14,58 @@ if (!process.env.OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
+// ✅ CẬP NHẬT: Danh sách cột khớp 100% với bảng survey_results của bạn
 const ALLOWED_COLUMNS = new Set([
-  // identity
+  // identity & timestamps
   "id",
 
-  // task
+  // task metrics
+  "total_duration_sec",
+  "task_page_elapsed_ms",
   "story_text",
   "sentence_count",
   "word_count",
-  "task_page_elapsed_ms",
+  "ai_chat_log",
 
-  // authorship
-  "authorship_label",
-  "authorship_reason",
+  // Nhóm WSE (Writing Self-Efficacy)
+  "wse1", "wse2", "wse3",
 
-  // completion
-  "completed_at",
-  "total_duration_sec",
+  // Nhóm CEB (Cognitive Effort)
+  "ceb1", "ceb2", "ceb3",
 
-  // Perceived Moral Dissonance
+  // Nhóm PSP (Perceived Social Presence)
+  "psp1", "psp2", "psp3", "psp4",
+
+  // Nhóm MI (Mind Induction)
+  "mi1", "mi2", "mi3",
+
+  // Nhóm PQ (Perceived Quality)
+  "pq1", "pq2", "pq3", "pq4",
+
+  // Nhóm BAA (Behavioral AI Adoption)
+  "baa1", "baa2", "baa3", "baa4", "baa5",
+
+  // Nhóm IA (Interaction Quality)
+  "ia1", "ia2", "ia3", "ia4",
+
+  // Nhóm PAU (Perceived AI Usefulness)
+  "pau1", "pau2", "pau3",
+
+  // Nhóm PMD (Perceived Moral Dissonance)
   "pmd1", "pmd2", "pmd3",
 
-  // Perceived Control (ví dụ)
+  // Nhóm PCT (Perceived Control)
   "pct1", "pct2", "pct3", "pct4",
 
-  // Writing self-efficacy (ví dụ)
-  "wse1", "wse2", "wse3", "wse4", "wse5", "wse6", "wse7", "wse8",
-
+  // Authorship & Demographics
+  "authorship_label",
+  "authorship_reason",
+  "age_group",
+  "gender",
+  "education_level",
+  "email",
+  "follow_up_consent",
+  "additional_comments"
 ]);
 
 // ---------- Middleware ----------
@@ -60,8 +85,9 @@ function filterByAllowlist(updateData) {
   const filtered = {};
   for (const [key, val] of Object.entries(updateData || {})) {
     const lowerKey = String(key).toLowerCase();
+    
+    // Chỉ giữ lại các trường có trong danh sách ALLOWED_COLUMNS
     if (!ALLOWED_COLUMNS.has(lowerKey)) continue;
-
     if (typeof val === "undefined") continue;
 
     filtered[lowerKey] = val;
@@ -73,13 +99,11 @@ function filterByAllowlist(updateData) {
 app.post("/api/participants", async (req, res) => {
   try {
     const id = randomUUID();
-
     const { error } = await supabase.from("survey_results").insert([{ id }]);
     if (error) {
       console.error("participants insert error:", error.message);
       return res.status(500).json({ error: error.message });
     }
-
     return res.json({ participant_id: id });
   } catch (e) {
     console.error("participants error:", e);
@@ -87,12 +111,13 @@ app.post("/api/participants", async (req, res) => {
   }
 });
 
-// ---------- API: Update Survey (Allowlist + update-first) ----------
+// ---------- API: Update Survey (Allowlist logic) ----------
 app.post("/api/survey/update", async (req, res) => {
   try {
     const { id, ...updateData } = req.body || {};
     if (!id) return res.status(400).json({ error: "missing_id" });
 
+    // Áp dụng màng lọc Allowlist
     const filteredData = filterByAllowlist(updateData);
 
     if (Object.keys(filteredData).length === 0) {
@@ -110,6 +135,7 @@ app.post("/api/survey/update", async (req, res) => {
       return res.status(500).json({ error: updateError.message });
     }
 
+    // Nếu ID chưa tồn tại, thực hiện insert dự phòng
     if (!updatedRows || updatedRows.length === 0) {
       const { error: insertError } = await supabase
         .from("survey_results")
@@ -166,7 +192,7 @@ app.post("/api/participants/complete", async (req, res) => {
   }
 });
 
-// ---------- API: Chat ----------
+// ---------- API: Chat (GPT API) ----------
 app.post("/api/chat", async (req, res) => {
   try {
     const { messages } = req.body || {};
@@ -236,11 +262,11 @@ app.post("/api/chatlog", async (req, res) => {
   }
 });
 
-// ---------- Health ----------
+// ---------- Health Checks ----------
 app.get("/", (req, res) => res.send("Backend is running ✅"));
 app.get("/health", (req, res) => res.status(200).send("ok"));
 
-// ---------- Listen ----------
+// ---------- Server Start ----------
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running at port ${PORT}`);
