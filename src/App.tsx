@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useEffect, useMemo, useState } from "react";
 import FormShell from "./components/FormShell";
 
@@ -6,6 +5,7 @@ import ConsentPage from "./pages/ConsentPage";
 import BaselinePage from "./pages/BaselinePage";
 import InstructionPage from "./pages/InstructionPage";
 import TaskPage from "./pages/TaskPage";
+import TaskPageCond2 from "./pages/TaskPageCond2";
 import PostGroupPageA from "./pages/PostGroupPageA";
 import PostGroupPageB from "./pages/PostGroupPageB";
 import AuthorshipPage from "./pages/AuthorshipPage";
@@ -18,18 +18,29 @@ import { API_BASE, now } from "./utils";
 
 const TOTAL_STEPS = 9;
 
-// ✅ Robust scroll helper (works across iOS Safari / Android / Desktop)
 function scrollToTopSafe() {
-  // 1) window scroll
   try {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   } catch {
     window.scrollTo(0, 0);
   }
 
-  // 2) if your page uses a scroll container (just in case)
-  const el = document.querySelector(".container");
-  if (el && "scrollTop" in el) (el as HTMLElement).scrollTop = 0;
+  const selectors = [".container", ".card", ".form-shell", "main", "#root"];
+
+  selectors.forEach((selector) => {
+    const el = document.querySelector(selector);
+    if (el instanceof HTMLElement) {
+      el.scrollTop = 0;
+    }
+  });
+}
+
+function getConditionFromUrl(): "cond1" | "cond2" {
+  const params = new URLSearchParams(window.location.search);
+  const cond = params.get("cond");
+
+  if (cond === "cond2") return "cond2";
+  return "cond1";
 }
 
 function makeEmpty(): SurveyData {
@@ -47,43 +58,67 @@ function makeEmpty(): SurveyData {
 }
 
 export default function App() {
-  const [step, setStep] = useState<number>(1);
+  const [step, setStep] = useState<number>(() => {
+  const saved = sessionStorage.getItem("survey_step");
+  return saved ? Number(saved) : 1;
+});
+  const condition = useMemo(() => getConditionFromUrl(), []);
 
   const [data, setData] = useState<SurveyData>(() => {
-    const raw = sessionStorage.getItem("survey_data_v5");
-    return raw ? (JSON.parse(raw) as SurveyData) : makeEmpty();
-  });
+  const participant = sessionStorage.getItem("participant_id");
+  const raw = sessionStorage.getItem("survey_data_v5");
 
-  // ✅ Disable browser scroll restoration (prevents “stuck at bottom”)
+  if (!participant) {
+    sessionStorage.removeItem("survey_data_v5");
+    return makeEmpty();
+  }
+
+  return raw ? (JSON.parse(raw) as SurveyData) : makeEmpty();
+});
+
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
   }, []);
 
-  // ✅ Always scroll to top when step changes (mobile/tablet/desktop)
   useEffect(() => {
-    scrollToTopSafe();
-  }, [step]);
+  scrollToTopSafe();
 
-  // --- Persist local session data ---
+  setTimeout(() => {
+    scrollToTopSafe();
+  }, 0);
+}, [step]);
+
   useEffect(() => {
     sessionStorage.setItem("survey_data_v5", JSON.stringify(data));
   }, [data]);
+  useEffect(() => {
+  sessionStorage.setItem("survey_step", String(step));
+}, [step]);
 
-  // ✅ Create participant id once (server inserts row into survey_results)
   const ensureParticipant = async () => {
     const existing = sessionStorage.getItem("participant_id");
     if (existing) return existing;
 
-    const r = await fetch(`${API_BASE}/api/participants`, { method: "POST" });
+    const r = await fetch(`${API_BASE}/api/participants`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ condition_code: condition }),
+    });
+
     const d = await r.json();
-    if (!d?.participant_id) throw new Error("No participant_id returned");
+
+    if (!d?.participant_id) {
+      throw new Error("No participant_id returned");
+    }
+
     sessionStorage.setItem("participant_id", d.participant_id);
     return d.participant_id as string;
   };
 
-  // ✅ Sync wide table updates (lowercase keys for DB consistency)
   const syncToWideTable = async (payload: Record<string, any>) => {
     const participant_id = sessionStorage.getItem("participant_id");
     if (!participant_id) return;
@@ -94,11 +129,16 @@ export default function App() {
     });
 
     try {
-      await fetch(`${API_BASE}/api/survey/update`, {
+      const res = await fetch(`${API_BASE}/api/survey/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(lowercasePayload),
       });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || "syncToWideTable failed");
+      }
     } catch (e) {
       console.error("Sync failed:", e);
     }
@@ -111,33 +151,40 @@ export default function App() {
     }));
   };
 
-  // ✅ Likert update + immediate sync
   const setLikert = (id: string, v: Likert) => {
     setData((d) => ({ ...d, likert: { ...d.likert, [id]: v } }));
     syncToWideTable({ [id]: v });
   };
 
-  // ✅ Big blocks update (writing/authorship/demo) + autosave
-  const setDataAndAutosave = (updater: SurveyData | ((prev: SurveyData) => SurveyData)) => {
+  const setDataAndAutosave = (
+    updater: SurveyData | ((prev: SurveyData) => SurveyData)
+  ) => {
     setData((prev) => {
-      const next = typeof updater === "function" ? (updater as any)(prev) : updater;
+      const next =
+        typeof updater === "function" ? (updater as any)(prev) : updater;
 
-      // Writing
       if (next.writing?.storyText !== prev.writing?.storyText) {
-        syncToWideTable({ story_text: next.writing.storyText });
+        syncToWideTable({ submitted_ad_text: next.writing.storyText });
       }
 
-      // Authorship (normalize to DB columns)
       if (next.authorship !== prev.authorship) {
-        const payload: any = {};
-        if (typeof next.authorship?.value === "number") payload.authorship_label = next.authorship.value;
-        if (typeof next.authorship?.reason === "string") payload.authorship_reason = next.authorship.reason;
-        if (Object.keys(payload).length) syncToWideTable(payload);
+        const payload: Record<string, any> = {};
+
+        if (typeof next.authorship?.value === "number") {
+          payload.authorship = next.authorship.value;
+        }
+
+        if (typeof next.authorship?.reason === "string") {
+          payload.authorship_explanation = next.authorship.reason;
+        }
+
+        if (Object.keys(payload).length > 0) {
+          syncToWideTable(payload);
+        }
       }
 
-      // Demo (send raw; server allowlist decides what is stored)
       if (next.demo !== prev.demo) {
-        syncToWideTable(next.demo as any);
+        syncToWideTable(next.demo as Record<string, any>);
       }
 
       return next;
@@ -155,8 +202,7 @@ export default function App() {
         {step === 1 && (
           <ConsentPage
             onNext={async () => {
-              log("consent_accept");
-              await ensureParticipant();
+              log("consent_accept", { condition });
               setStep(2);
             }}
           />
@@ -168,7 +214,7 @@ export default function App() {
             setLikert={setLikert}
             baselineIds={baselineIds}
             onNext={() => {
-              log("baseline_done");
+              log("baseline_done", { condition });
               setStep(3);
             }}
           />
@@ -178,24 +224,36 @@ export default function App() {
           <InstructionPage
             onPrev={() => setStep(2)}
             onNext={() => {
-              log("instruction_done");
+              log("instruction_done", { condition });
               setStep(4);
             }}
           />
         )}
 
-        {step === 4 && (
-          <TaskPage
-            data={data}
-            setData={setDataAndAutosave}
-            log={log}
-            onPrev={() => setStep(3)}
-            onNext={() => {
-              log("task_submitted");
-              setStep(5);
-            }}
-          />
-        )}
+        {step === 4 &&
+          (condition === "cond2" ? (
+            <TaskPageCond2
+              data={data}
+              setData={setDataAndAutosave}
+              log={log}
+              onPrev={() => setStep(3)}
+              onNext={() => {
+                log("task_submitted", { condition });
+                setStep(5);
+              }}
+            />
+          ) : (
+            <TaskPage
+              data={data}
+              setData={setDataAndAutosave}
+              log={log}
+              onPrev={() => setStep(3)}
+              onNext={() => {
+                log("task_submitted", { condition });
+                setStep(5);
+              }}
+            />
+          ))}
 
         {step === 5 && (
           <PostGroupPageA
@@ -230,7 +288,7 @@ export default function App() {
             setData={setDataAndAutosave}
             onPrev={() => setStep(7)}
             onNext={() => {
-              log("demographics_done");
+              log("demographics_done", { condition });
               setStep(9);
             }}
           />
@@ -241,23 +299,35 @@ export default function App() {
             data={data}
             onPrev={() => setStep(8)}
             onFinish={async () => {
-              log("finish");
+              log("finish", { condition });
 
               const participant_id = sessionStorage.getItem("participant_id");
               if (participant_id) {
                 try {
-                  await fetch(`${API_BASE}/api/participants/complete`, {
+                  const res = await fetch(`${API_BASE}/api/survey/update`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ participant_id }),
+                    body: JSON.stringify({
+                      id: participant_id,
+                      finished_at: new Date().toISOString(),
+                      status: "completed",
+                    }),
                   });
+
+                  const text = await res.text().catch(() => "");
+                  if (!res.ok) {
+                    throw new Error(text || "Failed to complete survey");
+                  }
                 } catch (e) {
                   console.error("complete failed:", e);
+                  alert("提交最後狀態時發生錯誤，請稍後再試");
+                  return;
                 }
               }
 
               sessionStorage.removeItem("participant_id");
               sessionStorage.removeItem("survey_data_v5");
+              sessionStorage.removeItem("survey_step");
               setData(makeEmpty());
               setStep(1);
 

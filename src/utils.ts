@@ -1,9 +1,8 @@
 // src/utils.ts
 
-// ✅ Ưu tiên biến môi trường (Vercel/Local), fallback về Render nếu chưa set
 export const API_BASE =
   (import.meta.env.VITE_API_BASE as string | undefined)?.trim() ||
-  "https://survey-ai-writing.onrender.com";
+  "http://localhost:3001";
 
 export function now() {
   return Date.now();
